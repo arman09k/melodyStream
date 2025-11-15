@@ -1,4 +1,5 @@
 // --- Configuration ---
+// <-- IMPORTANT: set this to match your backend port / deployed URL -->
 const BASE_URL = 'http://localhost:9000';
 
 // --- DOM Elements ---
@@ -37,13 +38,17 @@ let currentUserId = localStorage.getItem('userId') || null;
 
 
 // --- Utility Functions ---
-function getHeaders(isFormData = false) {
+// method: 'GET' | 'POST' | 'PUT' | 'DELETE' etc.
+// isFormData: true when sending FormData (do not set Content-Type manually)
+function getHeaders(isFormData = false, method = 'GET') {
     const token = localStorage.getItem('token');
     const headers = {};
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    if (!isFormData) {
+    // Only set Content-Type for JSON body methods (and when not FormData)
+    const jsonMethods = ['POST', 'PUT', 'PATCH'];
+    if (!isFormData && jsonMethods.includes(method)) {
         headers['Content-Type'] = 'application/json';
     }
     return headers;
@@ -140,10 +145,10 @@ function renderAuthView() {
 
 async function handleAuth(endpoint, data, container) {
     try {
-        // Fix for "Network error while login": use BASE_URL directly for login/signup
+        // Use POST method for auth calls - inform getHeaders
         const response = await fetch(`${BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers: getHeaders(),
+            headers: getHeaders(false, 'POST'),
             body: JSON.stringify(data)
         });
         const result = await response.json();
@@ -155,7 +160,7 @@ async function handleAuth(endpoint, data, container) {
                 isAuthenticated = true;
                 
                 // Fetch profile immediately after login to get the current role, ID, and favorites
-                const profileResponse = await fetch(`${BASE_URL}/profile`, { headers: getHeaders() });
+                const profileResponse = await fetch(`${BASE_URL}/profile`, { headers: getHeaders(false, 'GET') });
                 if (profileResponse.ok) {
                     const profileData = await profileResponse.json();
                     userRole = profileData.user.role || 'user';
@@ -167,6 +172,7 @@ async function handleAuth(endpoint, data, container) {
                 }
                 initApp();
             } else if (endpoint === '/signup') {
+                // After signup switch to login view. If you want auto-login on signup, you can store token here if backend returns it.
                 document.getElementById('signup-form').style.display = 'none';
                 document.getElementById('login-form').style.display = 'flex';
             }
@@ -174,6 +180,7 @@ async function handleAuth(endpoint, data, container) {
             renderMessage(container, 'error', result.message || 'Authentication failed.');
         }
     } catch (error) {
+        console.error("Auth network error:", error);
         renderMessage(container, 'error', 'Network error during authentication.');
     }
 }
@@ -189,7 +196,7 @@ async function fetchAllData() {
         // 2. Fetch profile/favorites and playlists (if authenticated)
         if (isAuthenticated) {
             // Re-fetch profile to ensure latest favorites and role are loaded
-            const profileResponse = await fetch(`${BASE_URL}/profile`, { headers: getHeaders() });
+            const profileResponse = await fetch(`${BASE_URL}/profile`, { headers: getHeaders(false, 'GET') });
             if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 userFavorites = profileData.user.favorites || []; 
@@ -212,6 +219,7 @@ async function fetchAllData() {
         renderSongList(allSongs, views.main, '', 'All Songs'); 
 
     } catch (error) {
+        console.error("fetchAllData error:", error);
         renderMessage(views.main, 'error', 'Failed to load initial data. Make sure your backend is running.');
     }
 }
@@ -321,7 +329,8 @@ async function toggleFavorite(songId, button) {
     const endpoint = isFavorited ? `/songs/${songId}/unfavourite` : `/songs/${songId}/favourite`;
     const action = isFavorited ? 'removed from' : 'added to';
     try {
-        const response = await fetch(`${BASE_URL}${endpoint}`, { method: 'POST', headers: getHeaders() });
+        // Inform getHeaders this is a POST
+        const response = await fetch(`${BASE_URL}${endpoint}`, { method: 'POST', headers: getHeaders(false, 'POST') });
         const result = await response.json();
         if (response.ok) {
             if (isFavorited) {
@@ -340,6 +349,7 @@ async function toggleFavorite(songId, button) {
             renderMessage(document.getElementById('songs-message') || views.main, 'error', result.message || `Failed to ${action} favorites.`);
         }
     } catch (error) {
+        console.error("toggleFavorite error:", error);
         renderMessage(views.main, 'error', 'Network error while updating favorites.');
     }
 }
@@ -348,7 +358,7 @@ async function fetchPlaylists(render = true) {
     if (!isAuthenticated) return;
     try {
         // Now fetches ALL playlists (user's + admin's) from the updated backend
-        const response = await fetch(`${BASE_URL}/playlists`, { headers: getHeaders() });
+        const response = await fetch(`${BASE_URL}/playlists`, { headers: getHeaders(false, 'GET') });
         const result = await response.json();
         if (response.ok) {
             userPlaylists = result.data || [];
@@ -357,6 +367,7 @@ async function fetchPlaylists(render = true) {
             if(render) renderMessage(views.playlists, 'error', result.error || 'Failed to fetch playlists.');
         }
     } catch (error) {
+        console.error("fetchPlaylists error:", error);
         if(render) renderMessage(views.playlists, 'error', 'Network error while fetching playlists.');
     }
 }
@@ -374,7 +385,7 @@ function renderPlaylists(playlists) {
         <div class="playlist-list">
             ${playlists.length > 0 ? playlists.map(p => {
                 // Determine if the current user is the creator
-                const isCreator = p.createdBy && p.createdBy._id === currentUserId; 
+                const isCreator = p.createdBy && String(p.createdBy._id) === String(currentUserId); 
                 const creatorText = p.createdBy ? `Created by: ${p.createdBy.username}` : 'Creator Unknown';
                 
                 return `
@@ -413,7 +424,7 @@ async function handleCreatePlaylist(e) {
     try {
         const response = await fetch(`${BASE_URL}/songs/playlist/create`, {
             method: 'POST',
-            headers: getHeaders(),
+            headers: getHeaders(false, 'POST'),
             body: JSON.stringify({ name, description })
         });
         const result = await response.json();
@@ -424,6 +435,7 @@ async function handleCreatePlaylist(e) {
             renderMessage(document.getElementById('playlist-message'), 'error', result.message || 'Failed to create playlist.');
         }
     } catch (error) {
+        console.error("handleCreatePlaylist error:", error);
         renderMessage(views.playlists, 'error', 'Network error while creating playlist.');
     }
 }
@@ -431,7 +443,7 @@ async function handleCreatePlaylist(e) {
 async function handleDeletePlaylist(playlistId) {
     try {
         // The backend /:playlistId route now handles the auth and creator check
-        const response = await fetch(`${BASE_URL}/${playlistId}`, { method: 'DELETE', headers: getHeaders() }); 
+        const response = await fetch(`${BASE_URL}/${playlistId}`, { method: 'DELETE', headers: getHeaders(false, 'DELETE') }); 
         const result = await response.json();
         if (response.ok) {
             renderMessage(document.getElementById('playlist-message'), 'success', result.message);
@@ -440,13 +452,14 @@ async function handleDeletePlaylist(playlistId) {
             renderMessage(document.getElementById('playlist-message'), 'error', result.message || 'Failed to delete playlist.');
         }
     } catch (error) {
+        console.error("handleDeletePlaylist error:", error);
         renderMessage(views.playlists, 'error', 'Network error while deleting playlist.');
     }
 }
 
 async function fetchPlaylistDetails(playlistId) {
     try {
-        const response = await fetch(`${BASE_URL}/${playlistId}`, { headers: getHeaders() });
+        const response = await fetch(`${BASE_URL}/${playlistId}`, { headers: getHeaders(false, 'GET') });
         const result = await response.json();
         if (response.ok) {
             renderPlaylistDetails(result.playlist);
@@ -454,6 +467,7 @@ async function fetchPlaylistDetails(playlistId) {
             renderMessage(views.playlistDetail, 'error', result.message || 'Failed to fetch playlist details.');
         }
     } catch (error) {
+        console.error("fetchPlaylistDetails error:", error);
         renderMessage(views.playlistDetail, 'error', 'Network error while fetching playlist details.');
     }
 }
@@ -473,7 +487,7 @@ function renderPlaylistDetails(playlist) {
                     </div>
                     <div class="song-actions">
                         <button class="play-btn-playlist" data-song='${JSON.stringify(song).replace(/'/g, "&apos;")}' title="Play Song"><i class="fas fa-play"></i></button>
-                        ${playlist.createdBy && playlist.createdBy._id === currentUserId ? `
+                        ${playlist.createdBy && String(playlist.createdBy._id) === String(currentUserId) ? `
                             <button class="remove-from-playlist-btn danger" 
                                     data-playlist-id="${playlist._id}" 
                                     data-song-id="${song._id}" 
@@ -508,7 +522,7 @@ function renderPlaylistDetails(playlist) {
 
 async function handleRemoveSongFromPlaylist(playlistId, songId) {
     try {
-        const response = await fetch(`${BASE_URL}/${playlistId}/remove/${songId}`, { method: 'POST', headers: getHeaders() });
+        const response = await fetch(`${BASE_URL}/${playlistId}/remove/${songId}`, { method: 'POST', headers: getHeaders(false, 'POST') });
         const result = await response.json();
         if (response.ok) {
             renderMessage(document.getElementById('detail-message'), 'success', result.message);
@@ -517,6 +531,7 @@ async function handleRemoveSongFromPlaylist(playlistId, songId) {
             renderMessage(document.getElementById('detail-message'), 'error', result.message || 'Failed to remove song.');
         }
     } catch (error) {
+        console.error("handleRemoveSongFromPlaylist error:", error);
         renderMessage(views.playlistDetail, 'error', 'Network error while removing song.');
     }
 }
@@ -526,7 +541,7 @@ function openPlaylistModal(songId) {
     fetchPlaylists(false); 
 
     // Filter userPlaylists to only show the current user's own playlists for adding songs
-    const usersOwnPlaylists = userPlaylists.filter(p => p.createdBy && p.createdBy._id === currentUserId);
+    const usersOwnPlaylists = userPlaylists.filter(p => p.createdBy && String(p.createdBy._id) === String(currentUserId));
     
     const modalHTML = `
         <div id="playlist-modal" class="modal" style="display: flex;">
@@ -563,7 +578,7 @@ async function handleAddToPlaylist(playlistId, songId) {
         // The backend logic ensures only the playlist creator can add songs
         const response = await fetch(`${BASE_URL}/${playlistId}/add/${songId}`, {
             method: 'POST',
-            headers: getHeaders()
+            headers: getHeaders(false, 'POST')
         });
         const result = await response.json();
         if (response.ok) {
@@ -573,6 +588,7 @@ async function handleAddToPlaylist(playlistId, songId) {
             renderMessage(modalMessageContainer, 'error', result.message || 'Failed to add song.');
         }
     } catch (error) {
+        console.error("handleAddToPlaylist error:", error);
         renderMessage(modalMessageContainer, 'error', 'Network error while adding song.');
     }
 }
@@ -580,7 +596,7 @@ async function handleAddToPlaylist(playlistId, songId) {
 async function fetchAndRenderProfile() {
     if (!isAuthenticated) return;
     try {
-        const response = await fetch(`${BASE_URL}/profile`, { headers: getHeaders() });
+        const response = await fetch(`${BASE_URL}/profile`, { headers: getHeaders(false, 'GET') });
         const result = await response.json();
         if (response.ok) {
             userRole = result.user.role || 'user'; 
@@ -590,6 +606,7 @@ async function fetchAndRenderProfile() {
             renderMessage(views.profile, 'error', result.message || 'Failed to fetch profile.');
         }
     } catch (error) {
+        console.error("fetchAndRenderProfile error:", error);
         renderMessage(views.profile, 'error', 'Network error while fetching profile.');
     }
 }
@@ -634,7 +651,7 @@ async function handleProfileUpdate(e) {
     try {
         const response = await fetch(`${BASE_URL}/profile/update`, {
             method: 'PUT',
-            headers: getHeaders(true), 
+            headers: getHeaders(true, 'PUT'), 
             body: formData
         });
         const result = await response.json();
@@ -645,6 +662,7 @@ async function handleProfileUpdate(e) {
             renderMessage(messageContainer, 'error', result.message || 'Failed to update profile.');
         }
     } catch (error) {
+        console.error("handleProfileUpdate error:", error);
         renderMessage(views.profile, 'error', 'Network error while updating profile.');
     }
 }
@@ -660,7 +678,7 @@ async function playSong(song, queue, index) {
     }
 
     // Memory Leak Fix: Revoke any previous Blob URL
-    if (audioElement.src.startsWith('blob:')) {
+    if (audioElement.src && audioElement.src.startsWith('blob:')) {
         URL.revokeObjectURL(audioElement.src);
     }
     
@@ -677,9 +695,9 @@ async function playSong(song, queue, index) {
     const streamUrl = `${BASE_URL}/songs/stream/${song._id}`;
     
     try {
-        // 1. Use fetch to send the Authorization header
+        // 1. Use fetch to send the Authorization header for stream
         const response = await fetch(streamUrl, {
-            headers: getHeaders(false), 
+            headers: getHeaders(false, 'GET'), 
         });
 
         if (response.status === 401 || response.status === 403) {
@@ -774,7 +792,7 @@ async function fetchAdminData() {
     }
 
     try {
-        const usersResponse = await fetch(`${BASE_URL}/admin/users`, { headers: getHeaders() });
+        const usersResponse = await fetch(`${BASE_URL}/admin/users`, { headers: getHeaders(false, 'GET') });
         
         if (usersResponse.status === 403) {
              return renderMessage(views.admin, 'error', 'Access Denied: Your admin privileges were revoked or token expired.');
@@ -788,6 +806,7 @@ async function fetchAdminData() {
             renderMessage(views.admin, 'error', usersResult.message || 'Failed to fetch admin data.');
         }
     } catch (error) {
+        console.error("fetchAdminData error:", error);
         renderMessage(views.admin, 'error', 'Network error while fetching admin data.');
     }
 }
@@ -840,7 +859,7 @@ async function handleAdminSongUpload(e) {
         // Assuming Admin Upload Endpoint is: POST /admin/songs/upload
         const response = await fetch(`${BASE_URL}/admin/songs/upload`, {
             method: 'POST',
-            headers: getHeaders(true), 
+            headers: getHeaders(true, 'POST'), 
             body: formData
         });
         const result = await response.json();
@@ -854,6 +873,7 @@ async function handleAdminSongUpload(e) {
         }
 
     } catch (error) {
+        console.error("handleAdminSongUpload error:", error);
         renderMessage(messageContainer, 'error', 'Network error during file upload.');
     }
 }
@@ -881,7 +901,7 @@ document.getElementById('nav-logout').addEventListener('click', () => {
     playerFooter.style.display = 'none';
     audioElement.pause();
     // Revoke any active Blob URL to prevent memory leaks
-    if (audioElement.src.startsWith('blob:')) {
+    if (audioElement.src && audioElement.src.startsWith('blob:')) {
         URL.revokeObjectURL(audioElement.src);
     }
     renderAuthView();
@@ -889,7 +909,7 @@ document.getElementById('nav-logout').addEventListener('click', () => {
 });
 
 
-// --- Initialisation ---\
+// --- Initialisation ---
 function initApp() {
     // Check if token and role exists on load, and set state
     if (localStorage.getItem('token')) {

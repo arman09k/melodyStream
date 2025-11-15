@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true })); // parses form data
 app.use(cors());
 const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/', authRoutes)
 app.use('/', songRoutes)

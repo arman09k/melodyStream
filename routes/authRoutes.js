@@ -99,28 +99,61 @@ router.get('/profile',authMiddleware,async (req,res)=>{
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
-router.put("/profile/update",authMiddleware,upload.single("avatar"), 
+router.put(
+  "/profile/update",
+  authMiddleware,
+  upload.single("avatar"),
   async (req, res) => {
     try {
       const { username, email } = req.body;
       const updateData = {};
 
+      // Get current user to delete old avatar if needed
+      const existingUser = await User.findById(req.user.id);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update simple fields
       if (username) updateData.username = username;
       if (email) updateData.email = email;
-      if (req.file) updateData.avatar = req.file.path; // save uploaded image path
 
+      // Handle avatar update
+      if (req.file) {
+        // Path for the new avatar
+        const newAvatarPath = `/uploads/avatars/${req.file.filename}`;
+        updateData.avatar = newAvatarPath;
+
+        // Delete old avatar if exists and is not default
+        if (
+          existingUser.avatar &&
+          existingUser.avatar !== "/uploads/defaults/default-avatar.png"
+        ) {
+          const oldAvatarFullPath = path.join(
+            __dirname,
+            "..",
+            existingUser.avatar
+          );
+
+          // Delete file safely
+          fs.unlink(oldAvatarFullPath, (err) => {
+            if (err) {
+              console.log("Could not delete old avatar:", err.message);
+            } else {
+              console.log("Old avatar deleted:", oldAvatarFullPath);
+            }
+          });
+        }
+      }
+
+      // Save updated user
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         { $set: updateData },
         { new: true }
       ).select("-password");
 
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.status(200).json({
+      res.json({
         message: "Profile updated successfully",
         user: updatedUser,
       });

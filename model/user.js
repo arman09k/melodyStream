@@ -11,7 +11,11 @@ const userSchema = new mongoose.Schema({
         default: 'user' // Default to a standard user
     },
 
-  avatar: { type: String },
+  avatar: 
+  { 
+    type: String ,
+    default: "/uploads/avatars/default-avatar.png"
+  },
 
   playlists: [
     {
