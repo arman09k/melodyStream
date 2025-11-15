@@ -23,5 +23,5 @@ app.use('/',playlistRoutes)
 app.use('/',adminRoutes)
 
 app.listen(port, () => {
-  console.log(`Example app listening on port http://localhost:${port}`)
+  console.log(`Server running on port ${port}`);
 })
