@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MelodyStream - Music Player</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo">🎶 MelodyStream</div>
+        <nav id="main-nav" style="display: none;">
+            <button id="nav-admin" style="display:none;"><i class="fas fa-screwdriver-wrench"></i> Admin</button> 
+            <button id="nav-home"><i class="fas fa-music"></i> Songs</button>
+            <button id="nav-favorites"><i class="fas fa-heart"></i> Favorites</button> 
+            <button id="nav-playlists"><i class="fas fa-list-music"></i> Playlists</button>
+            <button id="nav-profile"><i class="fas fa-user-circle"></i> Profile</button>
+            <button id="nav-logout" class="danger"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </nav>
+    </header>
+
+    <main id="app-container">
+        <div id="auth-view" class="view"></div>
+        <div id="main-view" class="view" style="display: none;"></div>
+        <div id="favorites-view" class="view" style="display: none;"></div>
+        <div id="playlist-view" class="view" style="display: none;"></div>
+        <div id="profile-view" class="view" style="display: none;"></div>
+        <div id="playlist-detail-view" class="view" style="display: none;"></div>
+        <div id="admin-view" class="view" style="display: none;"></div>
+    </main>
+
+    <footer id="music-player" style="display: none;">
+        <div class="player-controls">
+            <button id="player-prev"><i class="fas fa-backward"></i></button>
+            <button id="player-play-pause"><i class="fas fa-play"></i></button>
+            <button id="player-next"><i class="fas fa-forward"></i></button>
+        </div>
+        <div class="player-info">
+            <span id="player-current-time">0:00</span>
+            <input type="range" id="player-seek" value="0" max="100">
+            <span id="player-duration">0:00</span>
+        </div>
+        <div class="player-song-details">
+            <p id="player-title">No song playing</p>
+            <p id="player-artist"></p>
+        </div>
+        <audio id="audio-element"></audio>
+    
+
+    </footer>
+   <footer id="app-footer">
+    <div class="social-links">
+        <a href="https://www.instagram.com/_armaan_sharma09?igsh=b25rMnFsaGt5cWE=" target="_blank">
+            <i class="fab fa-instagram"></i>
+        </a>
+        <a href="mailto:armansharmaa12b@gmail.com">
+            <i class="fas fa-envelope"></i>
+        </a>
+    </div>
+    <p>Made by Arman</p>
+</footer>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
