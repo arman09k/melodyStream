@@ -1,8 +1,16 @@
 // --- Configuration ---
 // <-- IMPORTANT: set this to match your backend port / deployed URL -->
-const BASE_URL = 'http://localhost:9000';
+const BASE_URL = 'https://melodystream.onrender.com/';
 
 // --- DOM Elements ---
+// ================= Hamburger Menu Toggle ================= //
+const hamburgerBtn = document.getElementById("hamburger-btn");
+const mainNav = document.getElementById("main-nav");
+
+hamburgerBtn.addEventListener("click", () => {
+    mainNav.classList.toggle("show");
+});
+
 const views = {
     auth: document.getElementById('auth-view'),
     main: document.getElementById('main-view'),

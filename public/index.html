@@ -9,16 +9,22 @@
 </head>
 <body>
     <header id="main-header">
-        <div class="logo">🎶 MelodyStream</div>
-        <nav id="main-nav" style="display: none;">
-            <button id="nav-admin" style="display:none;"><i class="fas fa-screwdriver-wrench"></i> Admin</button> 
-            <button id="nav-home"><i class="fas fa-music"></i> Songs</button>
-            <button id="nav-favorites"><i class="fas fa-heart"></i> Favorites</button> 
-            <button id="nav-playlists"><i class="fas fa-list-music"></i> Playlists</button>
-            <button id="nav-profile"><i class="fas fa-user-circle"></i> Profile</button>
-            <button id="nav-logout" class="danger"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        </nav>
-    </header>
+    <div class="logo">🎶 MelodyStream</div>
+
+    <button id="hamburger-btn" class="hamburger">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <nav id="main-nav" style="display: none;">
+        <button id="nav-admin" style="display:none;"><i class="fas fa-screwdriver-wrench"></i> Admin</button> 
+        <button id="nav-home"><i class="fas fa-music"></i> Songs</button>
+        <button id="nav-favorites"><i class="fas fa-heart"></i> Favorites</button> 
+        <button id="nav-playlists"><i class="fas fa-list-music"></i> Playlists</button>
+        <button id="nav-profile"><i class="fas fa-user-circle"></i> Profile</button>
+        <button id="nav-logout" class="danger"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </nav>
+</header>
+
 
     <main id="app-container">
         <div id="auth-view" class="view"></div>

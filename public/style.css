@@ -364,3 +364,163 @@ button:hover {
 .social-links a:hover {
     color: #4da3ff;
 }
+/* ================================
+   RESPONSIVE DESIGN 
+================================ */
+
+/* --- Small Screens: Below 768px --- */
+@media (max-width: 768px) {
+
+    /* Header */
+    #main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .logo {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+
+    #main-nav {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+        padding-top: 10px;
+    }
+
+    #main-nav button {
+        padding: 10px 12px;
+        font-size: 0.9em;
+        flex-grow: 1;
+        text-align: center;
+    }
+
+    #app-container {
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .view {
+        padding: 20px;
+    }
+
+    /* Song Items */
+    .song-item, .playlist-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .song-actions, .playlist-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    /* Player */
+    #music-player {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 15px;
+        text-align: center;
+    }
+
+    .player-controls button {
+        font-size: 1.1em;
+    }
+
+    .player-info {
+        margin: 0;
+        width: 100%;
+        gap: 5px;
+    }
+
+    .player-song-details {
+        text-align: center;
+        min-width: 100%;
+    }
+
+    #player-title {
+        font-size: 1em;
+    }
+}
+
+/* --- Extra Small Screens: Below 480px --- */
+@media (max-width: 480px) {
+
+    #main-nav button {
+        font-size: 0.8em;
+        padding: 8px;
+    }
+
+    .auth-form, .profile-form {
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .song-item, .playlist-item {
+        padding: 12px;
+    }
+
+    .player-controls button {
+        font-size: 1em;
+        padding: 6px 10px;
+    }
+
+    footer#app-footer p {
+        font-size: 0.8em;
+    }
+}
+/* ================================
+   HAMBURGER MENU
+================================ */
+
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    cursor: pointer;
+    color: white;
+}
+
+/* Mobile Only */
+@media (max-width: 768px) {
+
+    .hamburger {
+        display: block;
+        margin-left: auto;
+        margin-right: 10px;
+    }
+
+    #main-nav {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: #111;
+        padding: 10px 0;
+        margin-top: 10px;
+        border-top: 1px solid #222;
+
+        /* Animation */
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+    }
+
+    #main-nav.show {
+        display: flex;
+        max-height: 400px;
+    }
+
+    #main-nav button {
+        width: 100%;
+        text-align: left;
+        padding: 12px 18px;
+        border-radius: 0;
+        font-size: 0.95em;
+    }
+}
